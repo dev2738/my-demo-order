@@ -1,0 +1,10 @@
+apply plugin: "com.axelor.app-module"
+
+axelor {
+	title ""
+	description " Module"
+}
+
+dependencies {
+	implementation 'com.axelor.apps:axelor-base:6.0.3@jar'
+}

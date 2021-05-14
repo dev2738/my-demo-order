@@ -1,98 +1,63 @@
-import com.axelor.gradle.tasks.GenerateAosChangelog
-
 buildscript {
-  ext.repos = {
-    mavenCentral() {
-      content {
-        excludeGroup 'com.axelor'
-      }
+    ext.repos = {
+        jcenter()
+        mavenCentral()
+        maven { url 'https://plugins.gradle.org/m2/' }
+        maven { url 'https://repository.axelor.com/nexus/public/' }
     }
-    maven {
-      url 'https://plugins.gradle.org/m2/'
-      content {
-        excludeGroup 'com.axelor'
-      }
+    ext.platformVersion = '5.3.+'
+    ext.appVersion = '5.3.0'
+    repositories repos
+    dependencies {
+        classpath "com.axelor:axelor-gradle:${platformVersion}"
     }
-    maven { url 'https://repository.axelor.com/nexus/public/' }
-  }
-  ext.openPlatformVersion = '5.3.9'
-  ext.appVersion = '6.0.10'
-  repositories repos
-  dependencies {
-    classpath "com.axelor:axelor-gradle:${openPlatformVersion}"
-  }
 }
-
-allprojects { repositories repos }
-
-apply plugin: 'idea'
-apply plugin: 'eclipse'
-apply plugin: "com.axelor.app"
-
-apply from: './gradle/style.gradle'
 
 allprojects {
-
-  configurations {
-    runtimeClasspath.exclude group: "org.eclipse.birt.runtime.3_7_1", module: "org.apache.commons.codec"
-  }
-
-  apply plugin: 'idea'
-  apply plugin: 'eclipse'
-
-  group = "com.axelor"
-  version = "${appVersion}"
-
-  sourceCompatibility = 1.8
-  targetCompatibility = 1.8
-
+    repositories repos
 }
 
-subprojects {
-  group = "com.axelor.apps"
-}
+apply plugin: 'com.axelor.app'
 
 axelor {
-  title "Axelor ERP"
-  description "Axelor Entreprise Application"
+    title = 'Digibens Ltda :: My Demo '
 }
+
+allprojects {
+    apply plugin: 'idea'
+    apply plugin: 'eclipse'
+
+    group 'br.com.digibens'
+    version = ''
+
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+}
+
 
 dependencies {
-  gradle.appModules.each { dir ->
-    implementation project(":modules:$dir.name")
-  }
+    // add dependencies
+
+    // mandatory for base service to run first
+    implementation 'com.axelor.apps:axelor-base:6.0.3@jar'
+    implementation 'com.axelor.apps:axelor-message:6.0.3@jar'
+     implementation 'com.axelor.apps:axelor-admin:6.0.3@jar'
+     implementation 'com.axelor.apps:axelor-exception:6.0.3@jar'
+     implementation 'com.axelor.apps:axelor-tool:6.0.3@jar'
+     implementation 'com.google.apis:google-api-services-people:v1-rev537-1.25.0@jar'
+     implementation 'com.google.api-client:google-api-client:1.25.0@jar'
+     implementation 'com.google.http-client:google-http-client:1.25.0@jar'
+     implementation 'org.apache.commons:commons-math3:3.6.1@jar'
+     implementation 'org.iban4j:iban4j:3.2.1@jar'
+     implementation 'org.mnode.ical4j:ical4j:2.2.0@jar'
+     implementation 'commons-httpclient:commons-httpclient:3.1@jar'
+     implementation 'org.apache.jackrabbit:jackrabbit-webdav:2.8.0@jar'
+     implementation 'org.mnode.ical4j:ical4j-connector:1.0.1@jar'
+     implementation 'com.google.zxing:core:3.3.2@jar'
+     implementation 'com.itextpdf:itextpdf:5.5.13.1@jar'
+     implementation 'com.itextpdf:itext7-core:7.0.4'
+
+     gradle.appModules.each { dir ->
+	implementation project(":modules:$dir.name")
+     }
 }
-
-task("dataImport", type: JavaExec) {
-  main = "com.axelor.apps.erp.Main"
-  classpath = sourceSets.main.runtimeClasspath
-  if (System.getProperty("exec.args") != null) {
-    args System.getProperty("exec.args").split()
-  }
-}
-
-task archiveReports(type: Zip) {
-  file("modules").traverse(type: groovy.io.FileType.DIRECTORIES, maxDepth: 1) { dir ->
-    if (new File(dir, "build.gradle").exists() && new File(dir, "/src/main/resources/reports").exists()) {
-      new File(dir, "/src/main/resources/reports/").listFiles().each { report ->
-        from report.getPath()
-      }
-    }
-  }
-
-  classifier 'reports'
-  includeEmptyDirs = false
-  destinationDirectory = file("$buildDir/libs")
-}
-
-
-task generateChangeLog(type: GenerateAosChangelog) {
-  group "Axelor application"
-  description "Generate change logs from unreleased entries."
-  files = fileTree(projectDir) {
-    include '**/changelogs/**/*.yml'
-    include '**/changelogs/**/*.yaml'
-  }
-}
-
-build.finalizedBy archiveReports
